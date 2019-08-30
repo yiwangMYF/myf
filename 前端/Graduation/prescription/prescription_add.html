@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>添加处方</title>
+		<link rel="stylesheet" href="../css/bootstrap.css" />
+		<script src="../js/jquery-3.1.1.min.js"></script>
+		<script src="../js/bootstrap.js"></script>
+		<script src="../laydate/laydate.js" ></script>
+		<style type="text/css">
+			#header {
+				position: relative;
+				margin-top: 2px;
+			}
+			
+			#header ul li {
+				margin-left: 20px;
+			}
+			
+			a {
+				cursor: pointer;
+			}
+			
+			#content {
+				width: 800px;
+				margin-left: auto;
+				margin-right: auto;
+			}
+			#pSex input{
+				cursor: pointer;
+			}
+		</style>
+		<script type="text/javascript">
+			laydate.render({
+				elem: "#pBirth"
+			});
+			laydate.render({
+				elem: "#issue_date"
+			});
+			$(function(){
+				var maxInputs=8;
+				var number =1;
+				//给添加图标添加点击事件
+				$("#inputsWrapper div span[name=add]").bind("click",function(){
+					if(number<8){
+						$("#inputsWrapper").append('<div>'
+						+'<label>'+'药品名称：'+'</label>'
+						+'<input type="text" style="margin-left:4px"/>'
+						+'<label style="margin-left:4px">'+'数量：'+'</label>'
+						+'<input type="number" style="margin-left:4px"/>'
+						+'</div>'
+					);
+						number++;
+					}
+					
+				});
+				//给移除图标添加点击事件
+				$("#inputsWrapper div span[name=del]").bind("click",function(){
+					if(number>1){
+						$("#inputsWrapper div ").last().remove();
+						number--;
+						
+					}	
+				});	
+				//给用药详情最后一个输入框绑定离焦事件
+				$("#inputsWrapper div").last().children("input").last().bind("blur",function(){
+					calculation();
+				});
+			});
+			//就算总费用
+			function calculation(){
+				//定义一个json对象
+				var jsonObj={};
+				//定义一个数组
+				var jsonArr=[];
+				var number =$("#inputsWrapper div").length;
+			
+				for(i=0;i<number;i++){
+					//创建一个json对象
+					var json1={};
+					var name=$("#inputsWrapper div").eq(i).children("input").first().val();
+					json1.name=name;
+					
+					var num=$("#inputsWrapper div").eq(i).children("input").last().val();
+					json1.num=num;
+					
+					jsonArr.push(json1);
+				}
+				jsonObj.data=jsonArr;
+				sessionStorage.setItem("med",JSON.stringify(jsonArr));
+				
+				//提交数据到后台获取各药品的价格及计算总费用
+				$.ajax({
+					type:"post",
+					url:"http://localhost:8080/GD_myf/prescription_calculation",
+					async:true,
+					xhrFields: {
+							withCredentials: true
+						},	
+					data:{med_details:JSON.stringify(jsonArr)},
+					success:function(result){
+						var jsonObj2 = eval("("+result+")");
+						 if(jsonObj2.success==true){
+						 	//将用药详情数据存储到sessionStorage中
+							sessionStorage.setItem("med_details",jsonObj2.med_details);
+							//将总费用信息插入指定位置
+							$("#cost").val(jsonObj2.cost);
+							$("#cost").attr("readonly","readonly");
+							
+						 }
+						
+						 
+					}
+					
+				});
+			}
+			
+			//提交表单
+			function smt_prescription(){
+				//获取表单各个值
+				var data=$("#prescription").serialize();
+				var json={};
+				$("#prescription").serializeArray().map(function(x){
+					json[x.name]=x.value;
+				});
+				json.med_details=sessionStorage.getItem("med_details");
+				json.med=sessionStorage.getItem("med");
+				alert(JSON.stringify(json));
+				$.ajax({
+					type:"post",
+					url:"http://localhost:8080/GD_myf/prescription_add",
+					async:true,
+					xhrFields: {
+							withCredentials: true
+					},
+					data:json,
+					success:function(result){
+						var jsonObj=eval("("+result+")");
+						if(jsonObj.success==true){
+							location.href="prescription_query.html";
+						}else{
+							parent.alertDialog("提示","添加失败");
+						}
+						
+					}
+				});
+				return false;
+			}
+			
+			
+		</script>
+	</head>
+
+	<body>
+		<div id="header">
+			<ul class="nav nav-tabs">
+				<li class="active"><a href="javascript:history.back();">处方添加</a></li>
+			</ul>
+		</div>
+		<div id="content">
+			<div style="height: 50px;padding-top: 40px;padding-left: 100px;">
+				<font size="3" color="#D58512">添加处方</font>
+			</div>
+			<hr width="800px" style="background-color:#1B6D85;height: 0.5px;border: none;" />
+			<form id="prescription" class="form-horizontal" onsubmit="return smt_prescription()">
+				<div class="form-group">
+					<label class="control-label col-sm-2" for="pId">患者社保卡号：</label>
+					<div class="col-sm-10">
+						<input class="form-control" type="text" name="pId" id="pId" required="required"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label col-sm-2" for="pName">患者姓名：</label>
+					<div class="col-sm-10">
+						<input class="form-control" type="text" name="pName" id="pName" required="required"/>
+					</div>
+				</div>
+				<div class="form-group" id="pSex">
+					<label class="control-label col-sm-2" for="pSex">患者性别：</label>
+					<div class="col-sm-10" style="padding-left: 100px;padding-top: 7px;">						
+						<input type="radio" name="pSex"  value="男"/ checked>男&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+						<input  type="radio" name="pSex" value="女" class="form-radio"/>女
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="  control-label col-sm-2" for="pBirth">出生日期:</label>
+					<div class="col-sm-10">
+						<input type="text" class="form-control" id="pBirth" name="pBirth" required="required"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label  for="clinical_diagnosis" class="control-label col-sm-2">临床诊断：</label>
+					<div class="col-sm-10">
+						<textarea class="form-control" id="clinical_diagnosis" name="clinical_diagnosis" style="height: 60px;" required="required"></textarea>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label col-sm-2">用药详情：</label>
+					<div class="col-sm-10" style="padding-top: 3px;" id="inputsWrapper">
+						<div>
+							<label>药品名称：</label>
+							<input type="text" />
+							<label>数量：</label>
+							<input type="number"/>
+							<span class="logout glyphicon glyphicon-plus" aria-hidden="true" style="margin-left: 5px;cursor: pointer;" name="add"></span>
+							<span class="logout glyphicon glyphicon-remove" aria-hidden="true" style="margin-left: 5px;cursor: pointer;" name="del"></span>
+						</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label col-sm-2" for="cost">总费用：</label>
+					<div class="col-sm-4">
+						<input type="text"class="form-control" id="cost" name="cost"/>
+					</div>
+					<label class="control-label col-sm-2" for="issue_date">开具日期：</label>
+					<div class="col-sm-4">
+						<input class="form-control" id="issue_date" name="issue_date" required="required"/>
+					</div>
+				</div>
+				<div class="form-group" style="text-align: center;">
+					<input type="submit" class="btn btn-primary" value="确定" />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					<input type="reset" class="btn btn-success" value="重置" />
+				</div>
+			</form>
+		</div>
+			
+	</body>
+
+</html>

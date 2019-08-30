@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>处方查询</title>
+		<link rel="stylesheet" href="../css/bootstrap.css" />
+		<script src="../js/jquery-3.1.1.min.js"></script>
+		<script src="../js/bootstrap.js"></script>
+		<style type="text/css">
+			body {
+				font-size: 12px;
+			}
+			
+			#header {
+				position: relative;
+				margin-top: 2px;
+			}
+			
+			#header ul li {
+				margin-left: 20px;
+			}
+			
+			#content {
+				position: relative;
+				width: 96%;
+				min-width: 800px;
+				margin: 50px auto 0px;
+			}
+			
+			#content #form1 {
+				text-align: right;
+				margin-bottom: 10px;
+			}
+			
+			#content #form2 table tr th {
+				text-align: center;
+			}
+			
+			#content #form2 table tr td {
+				text-align: center;
+			}
+			
+			#content #btn-container {
+				text-align: center;
+			}
+			a{
+				cursor: pointer;
+			}
+		</style>
+		<script type="text/javascript">
+		//提交信息进行搜索
+		function search(){
+			
+			$.ajax({
+				type:"get",
+				url:"http://localhost:8080/GD_myf/prescription_query",
+				async:true,
+				xhrFields: {
+					withCredentials: true
+				},
+				data:$("#form1").serialize(),
+				success:function(result){
+				   var jsonObj = eval("("+result+")");
+					//清空表格中的原有数据
+					$("#form2 table tr:not(:first)").empty("");
+					//获取表格对象
+					var table =$("#form2 table");
+					if(jsonObj.success==false){
+						table.append('<tr><td colspan="10">'+'未查询到相关信息'+'</td></tr>');
+					}else{
+						
+						var data =jsonObj.data;
+						for(i=0;i<data.length;i++){
+								var pre =data[i];
+								var age=getAge(pre.pBirth);
+								table.append('<tr>'
+						        +'<td>'+(i+1)+'</td>'
+						        +'<td>'+pre.pId+'</td>'
+						        +'<td>'+pre.pName+'</td>'
+						        +'<td>'+age+'</td>'
+						        +'<td>'+pre.pSex+'</td>'
+						        +'<td>'+pre.clinical_diagnosis+'</td>'
+						        +'<td>'+pre.med_details+'</td>'  
+						        +'<td>'+pre.userId+'</td>'
+						        +'<td>'+pre.issue_date+'</td>'
+						        +'</tr>');
+						}
+						
+					}
+				}
+			});
+			return false;		
+		}
+		//根据出生日期计算年龄
+		function getAge(birth){
+			//获得出生日期的毫秒数
+			var birthTime = new Date(birth).getTime();
+		
+			//获得当前日期的毫秒数
+			var currentTime= new Date().getTime();
+			
+			return Math.ceil((currentTime-birthTime)/31536000000);	
+		}
+		
+		</script>
+	</head>
+
+	<body>
+		<div id="header">
+			<ul class="nav nav-tabs">
+				<li class="active"><a href="javascript:history.back();">处方查询</a></li>
+			</ul>
+		</div>
+		<div id="content">
+			<form id="form1" class="form-inline" onsubmit="return search()">
+				<input type="text" id="sousuo" name="ss" autofocus placeholder="按社保号搜索!" class="form-control input-sm" />
+				<input type="submit" value="搜 索" class="btn btn-warning btn-sm" />
+			</form>
+			<form id="form2" method="post" action="#">
+				<table class="table table-bordered table-hover">
+					<tr>
+						<th>序号</th>
+						<th>患者社保卡号</th>
+						<th>姓名</th>
+						<th>年龄</th>
+						<th>性别</th>
+						<th>临床诊断</th>
+						<th>用药详情</th>
+						<th>诊治医生</th>
+						<th>开具日期</th>
+					
+					</tr>
+				</table>
+			</form>
+		</div>
+	</body>
+
+</html>

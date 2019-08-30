@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>注册成功页面</title>
+		<script type="text/javascript" src="../js/jquery-3.1.1.min.js" ></script>
+		<script type="text/javascript" src="../js/bootstrap.js" ></script>
+		<link rel="stylesheet" href="../css/bootstrap.css" />
+		<script type="text/javascript">
+			$(function(){
+				//设置定时器
+				setInterval(changetime,1000);
+			});
+			var time=5;
+			function changetime(){
+				if(time==1){
+					location.href="login.html";
+				}else{
+					time--;
+					$("#info_time").html("恭喜您成功注册，"+time+"秒后将自动返回登录页面...");
+				}
+			}
+		</script>
+	</head>
+	<body>
+		<div style="padding-top: 10px;padding-left: 10px;">
+			<font size="6" id="info_time">恭喜您成功注册，5秒后将自动返回登录页面...</font><a href="login.html" style="font-size: 25px;">立即返回</a>
+		</div>
+		
+	</body>
+</html>

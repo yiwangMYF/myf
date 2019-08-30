@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>财务报表</title>
+		<script type="text/javascript" src="../js/jquery-3.1.1.min.js"></script>
+		<script type="text/javascript" src="../js/bootstrap.js"></script>
+		<script type="text/javascript" src="../js/echarts.common.min.js"></script>
+		<script src="../laydate/laydate.js"></script>
+		<link rel="stylesheet" href="../css/bootstrap.css" />
+		<style type="text/css">
+			#header {
+				position: relative;
+				margin-top: 2px;
+			}
+			
+			#header ul li {
+				margin-left: 20px;
+			}
+			
+			a {
+				cursor: pointer;
+			}
+			
+			#content {
+				margin-top: 20px;
+				margin-left: auto;
+				margin-right: auto;
+			}
+		</style>
+		<script type="text/javascript">
+			laydate.render({
+				elem: "#startDate"
+			});
+			laydate.render({
+				elem: "#endDate"
+			});
+			//提交表单获取统计结果
+			function smt_d() {
+				var columnChart = echarts.init($("#columnChart").get(0));
+				var pieChart1 = echarts.init($("#div1").get(0));
+				var pieChart2 = echarts.init($("#div2").get(0));
+				columnChart.showLoading();
+				pieChart1.showLoading();
+				pieChart2.showLoading();
+				//加载数据
+				$.ajax({
+					type: "get",
+					url: "http://localhost:8080/GD_myf/financial_report",
+					async: true,
+					xhrFields: {
+						withCredentials: true
+					},
+					data: $("#form1").serialize(),
+					success: function(result) {
+						var jsonObj = eval("(" + result + ")");
+						if (jsonObj.success == true) {
+							//隐藏加载动画
+							columnChart.hideLoading();
+							pieChart1.hideLoading();
+							pieChart2.hideLoading();
+							var dataText = $("#startDate").val().toLocaleString() + "~" + $("#endDate").val().toLocaleString();
+							var json1 = eval("(" + JSON.stringify(jsonObj.data) + ")");
+							//总收入
+							var enter = json1.sales + json1.return_totalExpenses;
+							//总支出
+							var out = json1.pur_totalExpenses + json1.frmloss_totalExpenses;
+							//加载数据柱状图图表
+							columnChart.setOption({
+								title: {
+									text: '总收支统计柱状图'
+								},
+								color: ['#C12E2A'],
+								tooltip: {
+									trigger: 'axis',
+									axisPointer: { // 坐标轴指示器，坐标轴触发有效
+										type: 'shadow' // 默认为直线，可选为：'line' | 'shadow'
+									}
+								},
+								legend: {
+									data: ['总额']
+								},
+								xAxis: {
+									data: ["总收入", "总支出"]
+								},
+								yAxis: {},
+								series: [{
+									name: '总额',
+									type: 'bar',
+									data: [enter, out],
+									itemStyle: {
+										normal: {
+											label: {
+												show: true,
+												position: 'top',
+												textStyle: {
+													color: 'blue'
+												}
+											}
+										}
+									}
+								}]
+							});
+							//总收入统计图
+							pieChart1.setOption({
+								title: {
+									text: '总收入统计饼状图',
+									subtext: dataText,
+									x: 'center'
+								},
+								tooltip: {
+									trigger: 'item',
+									formatter: "{a} <br/>{b} : {c} ({d}%)"
+								},
+								legend: {
+									type: 'scroll',
+									orient: 'vertical',
+									right: 10,
+									top: 20,
+									bottom: 20,
+									data: ["销售额", "退货款"]
+								},
+								series: [{
+									name: '总额',
+									type: 'pie',
+									radius: '55%',
+									center: ['40%', '50%'],
+									data: [{
+										value: json1.sales,
+										name: "销售额"
+									}, {
+										value: json1.return_totalExpenses,
+										name: "退货款"
+									}],
+									itemStyle: {
+										emphasis: {
+											shadowBlur: 10,
+											shadowOffsetX: 0,
+											shadowColor: 'rgba(0, 0, 0, 0.5)'
+										}
+									}
+								}]
+							});
+							//支出统计图
+							pieChart2.setOption({
+								title: {
+									text: '总支出统计饼状图',
+									subtext: dataText,
+									x: 'center'
+								},
+								tooltip: {
+									trigger: 'item',
+									formatter: "{a} <br/>{b} : {c} ({d}%)"
+								},
+								legend: {
+									type: 'scroll',
+									orient: 'vertical',
+									right: 10,
+									top: 20,
+									bottom: 20,
+									data: ["进货款", "耗损费"]
+								},
+								series: [{
+									name: '总额',
+									type: 'pie',
+									radius: '55%',
+									center: ['40%', '50%'],
+									data: [{
+										value: json1.pur_totalExpenses,
+										name: "进货款"
+									}, {
+										value: json1.frmloss_totalExpenses,
+										name: "耗损费"
+									}],
+									itemStyle: {
+										emphasis: {
+											shadowBlur: 10,
+											shadowOffsetX: 0,
+											shadowColor: 'rgba(0, 0, 0, 0.5)'
+										}
+									}
+								}]
+							});
+						} 
+						
+					}
+				});
+				return false;
+			}
+		</script>
+	</head>
+
+	<body>
+		<div id="header">
+			<ul class="nav nav-tabs">
+				<li class="active"><a href="javascript:history.back();">财务统计</a></li>
+			</ul>
+		</div>
+		<div id="content" class="container-fluid">
+			<div class="row">
+				<form class="form-inline" id="form1" onsubmit="return smt_d()">
+					<div class="form-group">
+						<label class="control-label col-sm-4" for="startDate">开始日期：</label>
+						<div class="col-sm-2">
+							<input class="form-control" type="text" id="startDate" name="startDate" />
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="control-label col-sm-4" for="endDate">结止日期：</label>
+						<div class="col-sm-2">
+							<input class="form-control" type="text" id="endDate" name="endDate" />
+						</div>
+					</div>
+					<div class="form-group">
+						<input type="submit" class="btn btn-sm btn-warning" value="获取" />
+					</div>
+				</form>
+			</div>
+			<hr width="100%" style="background-color:#1B6D85;height: 0.5px;border: none;text-align: center;" />
+			<div class="row">
+				<div id="columnChart" style="height: 400px;" class=" col-sm-4"></div>
+				<div id="div1" style="height: 400px;" class="col-sm-4"></div>
+				<div id="div2" style="height: 400px;" class="col-sm-4"></div>
+
+			</div>
+
+		</div>
+	</body>
+
+</html>

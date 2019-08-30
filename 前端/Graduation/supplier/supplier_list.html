@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>供应商查询</title>
+		<link rel="stylesheet" href="../css/bootstrap.css" />
+		<script src="../js/jquery-3.1.1.min.js"></script>
+		<script src="../js/bootstrap.js"></script>
+		<style type="text/css">
+			body {
+				font-size: 12px;
+			}
+			
+			#header {
+				position: relative;
+				margin-top: 2px;
+			}
+			
+			#header ul li {
+				margin-left: 20px;
+			}
+			
+			#content {
+				position: relative;
+				width: 96%;
+				min-width: 800px;
+				margin: 50px auto 0px;
+			}
+			
+			#content #form1 {
+				text-align: right;
+				margin-bottom: 10px;
+			}
+			
+			#content #form2 table tr th {
+				text-align: center;
+			}
+			
+			#content #form2 table tr td {
+				text-align: center;
+			}
+			
+			#content #btn-container {
+				text-align: center;
+			}
+			
+			#content #btn-container input {
+				margin: 5px 20px;
+			}
+		</style>
+		<script type="text/javascript">
+			/**
+			 * 全选与反选
+			 */
+			function checkAll(currNode) {
+				$("#form2 table tr td input[name=id]").prop("checked", currNode.checked);
+			}
+			/**
+			 * 添加
+			 */
+			function add() {
+				location.href = "supplier_add.html";
+			}
+			/**
+			 * 修改
+			 */
+			function update() {
+				//获得选中行的数量
+				var checkedCount = $("#form2 table tr td input[name=id]:checked").length;
+				//判断是否不是选中一行
+				if (checkedCount != 1) {
+					parent.alertDialog("提示", "请选中一条要修改的行!");
+					return;
+				}
+				//获取所选行的supId,并将其存储到sessionStorage中存储
+				var supId = $("#form2 table tr td input[name=id]:checked").val();
+				sessionStorage.setItem("supId", supId);
+				location.href = "supplier_update.html";
+			}
+			/**
+			 * 删除
+			 */
+			function del() {
+				//获取选中的行数
+				var checkedNum = $("#form2 table tr td input[name=id]:checked").length;
+				//判断是否选中一行
+				if (checkedNum != 1) {
+					parent.alertDialog("提示", "请选中一条要修改的行！");
+					return;
+				}
+				parent.confirmDialog("", "您确定要删除所选行的数据吗？", function() {
+					$.ajax({
+						type: "get",
+						url: "http://localhost:8080/GD_myf/supplier_delete",
+						async: true,
+						xhrFields: {
+							withCredentials: true
+						},
+						data: $("#form2").serialize(),
+						success: function(result) {
+							var jsonObj = eval("(" + result + ")");
+							if (jsonObj.success) {
+								//重新加载页面
+								location.reload();
+							} else {
+								parent.confirmDialog_2("提示", "删除信息失败！");
+							}
+						}
+					});
+				});
+			}
+			/**
+			 * 按条件搜索供应商
+			 */
+			function search() {
+				$.ajax({
+					type: "get",
+					url: "http://localhost:8080/GD_myf/supplier_fuzzyQuery",
+					async: true,
+					xhrFields: {
+						withCredentials: true
+					},
+					data:$("#form1").serialize(),
+					
+					success: function(result) {
+						var jsonObj = eval("(" + result + ")");
+						//清空表格中的原有数据
+						$("#form2 table tr:not(:first)").empty("");
+						//获取数据列表的表格
+						var table = $("#form2 table");
+						alert(jsonObj.success);
+						//判断是否成功返回数据
+						if (!jsonObj.success) {
+							table.append('<tr><td colspan="6">暂未有数据</td></tr>');
+						} else {
+							//获取数据
+							var data = jsonObj.data;
+							//遍历数据数组
+							for (i = 0; i < data.length; i++) {
+								var supplier = data[i];
+								table.append('<tr><td><input type="checkbox" name="id" value="' + supplier.supId + '"></td>' + '<td>' + (i + 1) + '</td>' + '<td id="supId">' + supplier.supId + '</td>' + '<td id="supName">' + supplier.supName + '</td>' + '<td id="supTel">' + supplier.supTel + '</td>' + '<td id="supAddress">' + supplier.supAddress + '</td></tr>');
+							}
+						}
+					},
+				});
+				return false;
+			}
+			//页面加载
+			$(function() {
+				$.ajax({
+					type: "post",
+					url: "http://localhost:8080/GD_myf/supplier_query",
+					async: true,
+					xhrFields: {
+						withCredentials: true
+					},
+					success: function(result) {
+						var jsonObj = eval("(" + result + ")");
+						//获取数据列表的表格
+						var table = $("#form2 table");
+						//判断是否成功返回数据
+						if (!jsonObj.success) {
+							table.append('<tr><td colspan="6">暂未有数据</td></tr>');
+						} else {
+							//获取数据
+							var data = jsonObj.data;
+							//遍历数据数组
+							for (i = 0; i < data.length; i++) {
+								var supplier = data[i];
+								table.append('<tr><td><input type="checkbox" name="id" value="' + supplier.supId + '"></td>' + '<td>' + (i + 1) + '</td>' + '<td id="supId">' + supplier.supId + '</td>' + '<td id="supName">' + supplier.supName + '</td>' + '<td id="supTel">' + supplier.supTel + '</td>' + '<td id="supAddress">' + supplier.supAddress + '</td></tr>');
+							}
+						}
+					}
+				});
+			});
+			
+			
+		</script>
+	</head>
+
+	<body>
+		<div id="header">
+			<ul class="nav nav-tabs">
+				<li class="active"><a href="javascript:history.back();">供应商查询</a></li>
+			</ul>
+		</div>
+		<div id="content">
+			<form id="form1" class="form-inline" onsubmit="return search()">
+				<input type="text" id="sousuo" name="ss" autofocus placeholder="按供应商名称搜索!" class="form-control input-sm" />
+				<input type="submit" value="搜 索" class="btn btn-warning btn-sm" />
+			</form>
+			<form id="form2" method="post" action="#">
+				<table class="table table-bordered table-hover">
+					<tr>
+						<th><input type="checkbox" onclick="checkAll(this)" /></th>
+						<th>序号</th>
+						<th>供应商信用码</th>
+						<th>名称</th>
+						<th>联系方式</th>
+						<th>地址</th>
+					</tr>
+				</table>
+			</form>
+			<div id="btn-container">
+				<input type="button" value="添 加" class="btn btn-primary btn-sm" onclick="add()" />
+				<input type="button" value="修 改" class="btn btn-success btn-sm" onclick="update()" />
+				<input type="button" value="删 除" class="btn btn-danger btn-sm" onclick="del()" />
+			</div>
+		</div>
+	</body>
+
+</html>

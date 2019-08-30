@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>设置药品的售价</title>
+		<link rel="stylesheet" href="../css/bootstrap.css" />
+		<script src="../js/jquery-3.1.1.min.js"></script>
+		<script src="../js/bootstrap.js"></script>
+
+		<style type="text/css">
+			#header {
+				position: relative;
+				margin-top: 2px;
+			}
+			
+			#header ul li {
+				margin-left: 20px;
+			}
+			
+			#header ul li a {
+				cursor: pointer;
+			}
+			
+			#content {
+				width: 600px;
+				margin-left: auto;
+				margin-right: auto;
+			}
+		</style>
+		<script type="text/javascript">
+			//页面加载
+			$(function() {
+				//从sessionStorage中获取mId和mName
+				var mId = sessionStorage.getItem("mId");
+				var mName = sessionStorage.getItem("mName");
+				sessionStorage.removeItem("mId");
+				sessionStorage.removeItem("mName");
+				//将获取到的值回显到指定输入框
+				$("#mId").val(mId);
+				$("#mId").attr("readonly", "readonly");
+				$("#mName").val(mName);
+				$("#mName").attr("readonly", "readonly");
+				//获取当前药品的售价
+				$.ajax({
+					type: "post",
+					url: "http://localhost:8080/GD_myf/medicine_getNowPrice",
+					async: true,
+					xhrFields: {
+						withCredentials: true
+					},
+					data: {
+						mId: mId
+					},
+					success: function(result) {
+					
+						var jsonObj = eval("(" + result + ")");
+						if (jsonObj.success) {
+							$("#nowPrice").css("display", "block");
+							$("#nowPrice").text("当前售价：" + jsonObj.data.outPrice);
+						} else {
+							$("#nowPrice").css("display", "block");
+							$("#nowPrice").text("暂未设置售价");
+						}
+					}
+				});
+			});
+			
+			function setPrice(){
+				//提交表单设置药品售价
+				$.ajax({
+					type: "post",
+					url:"http://localhost:8080/GD_myf/medicine_setPrice",
+					async: true,
+					xhrFields: {
+						withCredentials: true
+					},
+					data:$("#price_form").serialize(),
+					success:function(result){
+						var jsonObj = eval("("+result+")");
+						if(jsonObj.success){
+							location.href="mecicine_stockList.html";
+						}
+						
+					}
+				});
+				return false;
+			}
+		</script>
+
+	</head>
+
+	<body>
+		<div id="header">
+			<ul class="nav nav-tabs">
+				<li class="active"><a href="javascript:history.back();">设置药品售价</a></li>
+			</ul>
+		</div>
+		<div id="content">
+			<div style="height: 50px;padding-top: 40px;padding-left: 50px;">
+				<font size="3" color="#D58512">设置药品的售价</font>
+			</div>
+			<hr width="500px" />
+			<div style="width: 500px;padding-left: 50px;">
+				<form class="form-horizontal" id="price_form" onsubmit="return setPrice()">
+					<div class="form-group">
+						<label class="col-sm-3 control-label" for="mId">批准文号:</label>
+						<div class="col-sm-6 ">
+							<input type="text" id="mId" name="mId" class="form-control" />
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-3 control-label" for="mName">药品名称:</label>
+						<div class="col-sm-6 ">
+							<input type="text" id="mName" name="mName" class="form-control" />
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-3 control-label" for="outPrice">售价：</label>
+						<div class="col-sm-6">
+							<input type="text" id="outPrice" name="outPrice" class="form-control" />
+						</div>
+						<div class="col-sm-3" style="display: none;color: red;" id="nowPrice"></div>
+					</div>
+					<div class="form-group" style="text-align: center;">
+						<input type="submit" value="确定" class="btn btn-primary" />
+					</div>
+				</form>
+			</div>
+		</div>
+	</body>
+
+</html>

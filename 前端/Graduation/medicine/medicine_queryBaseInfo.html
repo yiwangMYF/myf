@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<link rel="stylesheet" href="../css/bootstrap.css" />
+		<script src="../js/jquery-3.1.1.min.js"></script>
+		<script src="../js/bootstrap.js"></script>
+		<style type="text/css">
+			body {
+				font-size: 12px;
+			}
+			
+			#header {
+				position: relative;
+				margin-top: 2px;
+			}
+			
+			#header ul li {
+				margin-left: 20px;
+			}
+			
+			#content {
+				position: relative;
+				width: 96%;
+				min-width: 800px;
+				margin: 50px auto 0px;
+			}
+			
+			#content #form1 {
+				text-align: right;
+				margin-bottom: 10px;
+			}
+			
+			#content #form2 table tr th {
+				text-align: center;
+			}
+			
+			#content #form2 table tr td {
+				text-align: center;
+			}
+		</style>
+		<script type="text/javascript">
+			function search(){
+				$.ajax({
+					type:"get",
+					url:"http://localhost:8080/GD_myf/medicine_info",
+					async:true,
+					xhrFields: {
+							withCredentials: true
+					},
+					data:$("#form1").serialize(),
+					success:function(result){
+						
+						var jsonObj =eval("("+result+")");
+						//清空表格中的原有数据
+						$("#form2 table tr:not(:first)").empty("");
+						//获取表格对象
+						var table =$("#form2 table");
+						if(jsonObj.success==false){
+							table.append('<tr><td colspan="9">'+'未查询到相关信息'+'</td></tr>');
+						}else{
+							var data =jsonObj.data;
+							for(i=0;i<data.length;i++){
+								var med =data[i];
+								table.append('<tr><td><input type="checkbox" name="id" value="'+med.mId+'" /></td>'
+						        +'<td>'+(i+1)+'</td>'
+						        +'<td>'+med.mId+'</td>'
+						        +'<td>'+med.mName+'</td>'
+						        +'<td>'+med.mSpec+'</td>'
+						        +'<td>'+med.mCateGory+'</td>'
+						        +'<td>'+med.supName+'</td>'
+						        +'<td>'+med.supTel+'</td>'
+						        +'<td>'+med.supAddress+'</td></tr>');
+							}
+						}
+						
+					}
+
+				});
+				return false;
+				
+			}
+		</script>
+	</head>
+
+	<body>
+		<div id="header">
+			<ul class="nav nav-tabs">
+				<li class="active"><a href="javascript:history.back();">药品信息查询</a></li>
+			</ul>
+		</div>
+		<div id="content">
+			<form id="form1" class="form-inline" onsubmit="return search()">
+				<input type="text" id="sousuo" name="ss" autofocus placeholder="按药品名称搜索!" class="form-control input-sm" />
+				<input type="submit" value="搜 索" class="btn btn-warning btn-sm" />
+			</form>
+			<form id="form2" method="post" action="#">
+				<table class="table table-bordered table-hover">
+					<tr>
+						<th><input type="checkbox" onclick="checkAll(this)" /></th>
+						<th>序号</th>
+						<th>药品批准文号</th>
+						<th>药品名称</th>
+						<th>药品规格</th>
+						<th>药品类别</th>
+						<th>供应商名称</th>
+						<th>供应商联系方式</th>
+						<th>供应商地址</th>
+					</tr>
+				</table>
+			</form>
+		
+		</div>
+
+	</body>
+
+</html>

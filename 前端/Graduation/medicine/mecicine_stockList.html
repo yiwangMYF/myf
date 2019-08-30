@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>库存数据查询页面</title>
+		<link rel="stylesheet" href="../css/bootstrap.css" />
+		<script src="../js/jquery-3.1.1.min.js"></script>
+		<script src="../js/bootstrap.js"></script>
+		<style type="text/css">
+			body {
+				font-size: 12px;
+			}
+			#header {
+				position: relative;
+				margin-top: 2px;
+			}
+			
+			#header ul li {
+				margin-left: 20px;
+			}
+			
+			a {
+				cursor: pointer;
+			}
+			
+			#content {
+				position: relative;
+				width: 96%;
+				min-width: 800px;
+				margin: 50px auto 0px;
+			}
+			
+			#content #form1 {
+				text-align: right;
+				margin-bottom: 10px;
+			}
+			
+			#content #form2 table tr th {
+				text-align: center;
+			}
+			
+			#content #form2 table tr td {
+				text-align: center;
+			}
+			.abc{
+				color: red;
+			}
+		</style>
+		<script type="text/javascript">
+			/**
+			 * 全选与反选
+			 */
+			function checkAll(currNode) {
+				$("#form2 table tr td input[name=id]").prop("checked", currNode.checked);
+			}
+			/**
+			 * 页面数据加载
+			 */
+			$(function() {
+				$.ajax({
+					type:"post",
+					url:"http://localhost:8080/GD_myf/medicine_stockInfo",
+					async:true,
+					xhrFields: {
+							withCredentials: true
+					},
+					success:function(result){
+						
+						var jsonObj =eval("("+result+")");
+						//获取表格
+						var table=$("#form2 table");
+						if(jsonObj.success){
+						
+							if(jsonObj.data.length==0){
+								table.append('<tr><td colspan="7">暂未有数据</td></tr>');
+									$("#page").text("0");
+									$("#total").text("0");
+							}else{							
+								var data=jsonObj.data;
+								for(i=0;i<data.length;i++){
+									var stock=data[i];
+								table.append('<tr><td><input type="checkbox" name="id" value="'+stock.mId+'" /></td>'
+						        +'<td>'+(i+1)+'</td>'
+						        +'<td>'+stock.mId+'</td>'
+						        +'<td>'+stock.mName+'</td>'
+						        +'<td>'+stock.totalNum+'</td>'
+						        +'<td>'+stock.outPrice+'￥'+'</td>'
+						        +'<td>'+'<a href="javascript:void(0);" onclick="setPrice(this)">'+'修改售价'+'</a>'+'</td></tr>');
+						       
+								}
+								$("#page").text(jsonObj.pageBean.currentPage);
+								$("#total").text(jsonObj.pageBean.totalPages);
+							}
+							
+							
+						}
+					}
+				});
+			});
+			//根据页面输入的页数获取页面数据
+			function getPageInfo(){
+				var currentPage=$("#currentPage").val();
+				var totalPages=$("#total").text();
+				if(parseInt(currentPage)<1|| parseInt(currentPage)>parseInt(totalPages)){
+					parent.alertDialog("","你输入的页数超出范围！");
+					return;
+				}
+				$.ajax({
+					type:"post",
+					url:"http://localhost:8080/GD_myf/medicine_stockInfo",
+					async:true,
+					xhrFields: {
+							withCredentials: true
+					},
+					data:$("#form3").serialize(),
+					success:function(result){
+						var jsonObj =eval("("+result+")");
+						//清空表格中的原有数据
+						$("#form2 table tr:not(:first)").empty("");
+						//获取表格
+						var table=$("#form2 table");
+						if(jsonObj.success){
+							
+							if(jsonObj.data.length==0){
+								table.append('<tr><td colspan="7">没有数据</td></tr>');
+							}else{		
+								var data=jsonObj.data;
+								for(i=0;i<data.length;i++){
+									var stock=data[i];
+								table.append('<tr><td><input type="checkbox" name="id" value="'+stock.mId+'" /></td>'
+						        +'<td>'+(i+1)+'</td>'
+						        +'<td>'+stock.mId+'</td>'
+						        +'<td>'+stock.mName+'</td>'
+						        +'<td id="sss">'+stock.totalNum+'</td>'
+						        +'<td>'+stock.outPrice+'￥'+'</td>'
+						        +'<td>'+'<a href="javascript:void(0);" onclick="setPrice(this)">'+'修改售价'+'</a>'+'</td></tr>');
+						    
+								}
+							}
+							$("#page").text(jsonObj.pageBean.currentPage);
+							$("#total").text(jsonObj.pageBean.totalPages);
+							
+						}
+						
+					}
+					
+				});
+				return false;
+			}
+			//实现向上翻页（上一页）
+			function lastPage(){
+				var page=$("#page").text();
+				var currentPage_int=parseInt(page)-1;
+				if(currentPage_int<1){
+					return;
+				}
+				var currentPage=currentPage_int.toString();
+				$.ajax({
+					type:"post",
+					url:"http://localhost:8080/GD_myf/medicine_stockInfo",
+					async:true,
+					xhrFields: {
+							withCredentials: true
+					},
+					data:{currentPage:currentPage},
+					success:function(result){
+						var jsonObj =eval("("+result+")");
+						//清空表格中的原有数据
+						$("#form2 table tr:not(:first)").empty("");
+						//获取表格
+						var table=$("#form2 table");
+						if(jsonObj.success){
+							
+							if(jsonObj.data.length==0){
+								table.append('<tr><td colspan="7">没有数据</td></tr>');
+							}else{		
+								var data=jsonObj.data;
+								for(i=0;i<data.length;i++){
+									var stock=data[i];
+								table.append('<tr><td><input type="checkbox" name="id" value="'+stock.mId+'" /></td>'
+						        +'<td>'+(i+1)+'</td>'
+						        +'<td>'+stock.mId+'</td>'
+						        +'<td>'+stock.mName+'</td>'
+						        +'<td id="sss">'+stock.totalNum+'</td>'
+						        +'<td>'+stock.outPrice+'￥'+'</td>'
+						        +'<td>'+'<a href="javascript:void(0);" onclick="setPrice(this)">'+'修改售价'+'</a>'+'</td></tr>');
+						      
+								}
+							}
+							$("#page").text(jsonObj.pageBean.currentPage);
+							$("#total").text(jsonObj.pageBean.totalPages);
+							
+						}						
+					}	
+				});
+				
+			}
+			//实现向下翻页（下一页）
+			function nextPage(){
+				var page=$("#page").text();
+				var totalPages=$("#total").text();
+				var currentPage_int=parseInt(page)+1;
+				if(currentPage_int>parseInt(totalPages)){
+					return;
+				}
+				var currentPage=currentPage_int.toString();
+				$.ajax({
+					type:"post",
+					url:"http://localhost:8080/GD_myf/medicine_stockInfo",
+					async:true,
+					xhrFields: {
+							withCredentials: true
+					},
+					data:{currentPage:currentPage},
+					success:function(result){
+						var jsonObj =eval("("+result+")");
+						//清空表格中的原有数据
+						$("#form2 table tr:not(:first)").empty("");
+						//获取表格
+						var table=$("#form2 table");
+						if(jsonObj.success){
+							
+							if(jsonObj.data.length==0){
+								table.append('<tr><td colspan="7">'+'没有数据'+'</td></tr>');
+							}else{		
+								var data=jsonObj.data;
+								for(i=0;i<data.length;i++){
+									var stock=data[i];
+								table.append('<tr><td><input type="checkbox" name="id" value="'+stock.mId+'" /></td>'
+						        +'<td>'+(i+1)+'</td>'
+						        +'<td>'+stock.mId+'</td>'
+						        +'<td>'+stock.mName+'</td>'
+						        +'<td id="sss">'+stock.totalNum+'</td>'
+						        +'<td>'+stock.outPrice+'￥'+'</td>'
+						        +'<td>'+'<a href="javascript:void(0);" onclick="setPrice(this)">'+'修改售价'+'</a>'+'</td></tr>');
+						       
+								}
+							}
+							$("#page").text(jsonObj.pageBean.currentPage);
+							$("#total").text(jsonObj.pageBean.totalPages);
+							
+						}						
+					}	
+				});	
+			}
+		//实现根据药品名称模糊搜索
+		function searchMedicine(){
+			$.ajax({
+					type:"post",
+					url:"http://localhost:8080/GD_myf/medicine_stockQuery",
+					async:true,
+					xhrFields: {
+							withCredentials: true
+					},
+					data:$("#form1").serialize(),
+					success:function(result){
+						
+						var jsonObj =eval("("+result+")");
+						
+						//获取表格
+						var table=$("#form2 table");
+						//清空表格中的原有数据
+						$("#form2 table tr:not(:first)").empty("");
+						if(jsonObj.success){
+							if(jsonObj.data.length==0){
+								table.append('<tr><td colspan="7" >'+'未查询到数据'+'</td></tr>');
+							}else{							
+								var data=jsonObj.data;
+								for(i=0;i<data.length;i++){
+									var stock=data[i];
+								table.append('<tr><td><input type="checkbox" name="id" value="'+stock.mId+'" /></td>'
+						        +'<td>'+(i+1)+'</td>'
+						        +'<td>'+stock.mId+'</td>'
+						        +'<td>'+stock.mName+'</td>'
+						        +'<td id="sss">'+stock.totalNum+'</td>'
+						        +'<td>'+stock.outPrice+'￥'+'</td>'
+						        +'<td>'+'<a href="javascript:void(0);" onclick="setPrice(this)">'+'修改售价'+'</a>'+'</td></tr>');
+						        if(stock.totalNum<100){
+						        	$("#sss").addClass("abc");	
+						        }
+								}
+							}
+							$("#pageInfoDiv").css("display","none");
+						
+							
+						}
+					}
+				});	
+				return false;
+		}
+		//修改售价
+		function setPrice(currNode){
+			//获取所在行的单元格对象数组
+			var tds=$(currNode).parents("tr").children("td");
+			//获取药品批准文号和药品名称
+			var mId=tds.eq(2).text();
+			var mName =tds.eq(3).text();
+			//将数据存储到sessionStorage中
+			sessionStorage.setItem("mId",mId);
+			sessionStorage.setItem("mName",mName);
+			location.href="medicine_setPrice.html";
+		}
+			
+		</script>
+	</head>
+
+	<body>
+		<div id="header">
+			<ul class="nav nav-tabs">
+				<li class="active"><a href="javascript:history.back();">库存浏览</a></li>
+			</ul>
+		</div>
+		<div id="content">
+			
+				<form id="form1" class="form-inline" onsubmit="return searchMedicine()">
+					<input type="text" id="sousuo" name="mName" autofocus placeholder="按药品名称搜索!" class="form-control input-sm" />
+					<input type="submit" value="搜 索" class="btn btn-warning btn-sm" />
+				</form>
+				<form id="form2" method="post" action="#">
+					<table class="table table-bordered table-hover">
+						<tr>
+							<th><input type="checkbox" onclick="checkAll(this)" /></th>
+							<th>序号</th>
+							<th>药品批准文号</th>
+							<th>药品名称</th>
+							<th>数量</th>
+							<th>当前售价</th>
+							<th>操作</th>
+						</tr>
+					</table>
+				</form>
+				<div class="row" style="display: block;" id="pageInfoDiv">
+					<div class="col-sm-4" style="padding-top: 2px;font-weight: 600;">
+						第<span id="page"></span>页共<span id="total"></span>页(每页显示8条)
+					</div>
+					<div class="col-sm-4">
+						<form id="form3" class="form-inline" onsubmit="return getPageInfo()">
+							<div class="form-group">
+								<label class="control-label" for="currentPage">请输入页数：</label>
+								<input type="text" id="currentPage" name="currentPage" />
+								<input type="submit" value="跳转" class="btn btn-primary btn-sm" />
+							</div>
+						</form>
+					</div>
+					<div class="col-sm-4" style="padding-left: 215px;">
+						<input type="button" class="btn-success" value="上一页" onclick="lastPage()"/>
+						<input type="button" class="brn btn-danger" value="下一页" onclick="nextPage()"/>
+					</div>
+				</div>
+
+		
+		</div>
+
+	</body>
+
+</html>

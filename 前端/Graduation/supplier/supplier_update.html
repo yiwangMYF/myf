@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>供应商信息修改</title>
+		<link rel="stylesheet" href="../css/bootstrap.css" />
+		<script src="../js/jquery-3.1.1.min.js"></script>
+		<script src="../js/bootstrap.js"></script>
+
+		<style type="text/css">
+			#header {
+				position: relative;
+				margin-top: 2px;
+			}
+			
+			#header ul li {
+				margin-left: 20px;
+			}
+			
+			#header ul li a {
+				cursor: pointer;
+			}
+			
+			#content {
+				width: 600px;
+				margin-left: auto;
+				margin-right: auto;
+			}
+		</style>
+		<script type="text/javascript">
+			//页面加载
+			$(function() {
+				//从sessionStorage中获取要修改的供应商id
+				var supId = sessionStorage.getItem("supId");
+				//清除sessionStorage中存储的supId
+				sessionStorage.removeItem("supId");
+				//从服务器中加载该供应商信息
+				$.ajax({
+					type: "get",
+					url: "http://localhost:8080/GD_myf/supplier_info",
+					async: true,
+					xhrFields: {
+						withCredentials: true
+					},
+					dataType: "text",
+					data: {
+						supId: supId
+					},
+					success: function(result) {
+						var jsonObj = eval("(" + result + ")");
+						if (jsonObj.success) {
+							var sup = jsonObj.data;
+							//将从服务器中获取的数据回显到表单中
+							$("#supId").val(sup.supId);
+							//将supId设置为只读
+							$("#supId").attr("readonly", "readonly");
+							$("#supName").val(sup.supName);
+							$("#supTel").val(sup.supTel);
+							$("#supAddress").val(sup.supAddress);
+						}
+					},
+					error: function() {
+						alert("失败时回调");
+					}
+				});
+			});
+			//表单提交
+			function update_2() {
+				$.get(
+					"http://localhost:8080/GD_myf/supplier_update", $("#sup_form").serialize(),
+					function(result) {
+						var jsonObj = eval("(" + result + ")");
+						
+						if (jsonObj.success) {
+							location.href = "supplier_list.html";
+						} else {
+							parent.alertDialog("提示", "修改信息失败");
+						}
+					}
+				);
+				return false;
+			}
+		</script>
+	</head>
+
+	<body>
+		<div id="header">
+			<ul class="nav nav-tabs">
+				<li class="active"><a href="javascript:history.back();">修改供应商信息</a></li>
+			</ul>
+		</div>
+		<div id="content">
+			<div style="height: 50px;padding-top: 40px;padding-left: 50px;">
+				<font size="3" color="#D58512">修改供应商信息</font>
+			</div>
+			<hr width="500px" />
+			<div style="width: 500px;">
+				<form class="form-horizontal" id="sup_form" onsubmit="return update_2()">
+					<div class="form-group">
+						<label for="supId" class="col-sm-3 control-label">供应商id:</label>
+						<div class="col-sm-7">
+							<input type="text" class="form-control" id="supId" placeholder="请输入供应商企业统一社会信用代码" name="supId">
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="supName" class="col-sm-3 control-label">供应商名称:</label>
+						<div class="col-sm-7">
+							<input type="text" class="form-control" id="supName" placeholder="请输入供应商名称" name="supName">
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="supTel" class="col-sm-3 control-label">供应商电话:</label>
+						<div class="col-sm-7">
+							<input type="text" class="form-control" id="supTel" placeholder="请输入供应商联系电话" name="supTel">
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="supAddress" class="col-sm-3 control-label">供应商地址:</label>
+						<div class="col-sm-7">
+							<input type="text" class="form-control" id="supAddress" placeholder="请输入供应商地址" name="supAddress">
+						</div>
+					</div>
+					<div class="form-group col-sm-10" style="padding-left: 250px;">
+						<input type="submit" value="确 定" class="btn btn-primary" />
+					</div>
+				</form>
+			</div>
+
+		</div>
+	</body>
+
+</html>

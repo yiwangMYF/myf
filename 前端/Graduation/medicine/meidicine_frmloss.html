@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>药品报损</title>
+		<link rel="stylesheet" href="../css/bootstrap.css" />
+		<script src="../js/jquery-3.1.1.min.js"></script>
+		<script src="../js/bootstrap.js"></script>
+		<script type="text/javascript" src="../laydate/laydate.js" ></script>
+		<style type="text/css">
+			#header {
+				position: relative;
+				margin-top: 2px;
+			}
+			
+			#header ul li {
+				margin-left: 20px;
+			}
+			
+			a {
+				cursor: pointer;
+			}
+			
+			#content {
+				width: 800px;
+				margin-left: auto;
+				margin-right: auto;
+			}
+		</style>
+		<script type="text/javascript">
+			laydate.render({
+				elem: "#lossDate"
+			});
+		
+			//页面加载
+			$(function() {
+				//为生产批号文本框绑定离焦事件
+				$("#mLotNum").bind("blur", function() {
+					var mId = $("#mId").val();
+					var mLotNum = $("#mLotNum").val();
+					if (mId == "" || mLotNum == "") {
+						parent.alertDialog("提示", "药品批准文号和药品生产批号不能为空");
+						return;
+					} else {
+						$.ajax({
+							type: "post",
+							url: "http://localhost:8080/GD_myf/medicine_getNowStock",
+							async: true,
+							xhrFields: {
+								withCredentials: true
+							},
+							data: {
+								mId: mId,
+								mLotNum: mLotNum
+							},
+							success: function(result) {
+								var jsonObj = eval("(" + result + ")");
+								if (jsonObj.success) {
+									var sNum = jsonObj.data.sNum;
+									sessionStorage.setItem("nowNum", sNum);
+									$("#nowNum").text("当前库存：" + sNum);
+									$("#nowNum").css("display", "block");
+								}
+							}
+						});
+					}
+				});
+			});
+			//提交表单
+			function frmloss() {
+				var nowNum = sessionStorage.getItem("nowNum");
+				var lossNum = $("#lossNum").val();
+				if (nowNum < lossNum) {
+					parent.alertDialog("错误提示", "输入的报损数量有误，不能超过库存已有数量！");
+					return;
+				}
+			$.ajax({
+				type:"post",
+				url:"http://localhost:8080/GD_myf/medicine_frmloss",
+				async:true,
+				xhrFields: {
+							withCredentials: true
+				},
+				data:$("#frmloss_form").serialize(),
+				success:function(result){
+					var jsonObj =eval("("+result+")");
+					if(jsonObj.success==false){
+						sessionStorage.removeItem("nowNum");
+						parent.alertDialog("错误提示","报损信息提交失败！");
+						
+					}else{
+						sessionStorage.removeItem("nowNum");
+						location.href="mecicine_stockList.html";
+					}
+					
+				}
+			});
+			return false;
+				
+			}
+		</script>
+	</head>
+
+	<body>
+		<div id="header">
+			<ul class="nav nav-tabs">
+				<li class="active"><a href="javascript:history.back();">药品报损</a></li>
+			</ul>
+		</div>
+		<div id="content">
+			<div style="height: 50px;padding-top: 40px;padding-left: 100px;">
+				<font size="3" color="#D58512">药品报损</font>
+			</div>
+			<hr width="800px" style="background-color:#1B6D85;height: 0.5px;border: none;" />
+			<div>
+				<form class="form-horizontal" id="frmloss_form" onsubmit="return frmloss()">
+					<div class="form-group">
+						<label class="col-sm-2 control-label" for="mId">批准文号:</label>
+						<div class="col-sm-3">
+							<input type="text" class="form-control" id="mId" name="mId" placeholder="请输入药品的批准文号" />
+						</div>
+						<label class="col-sm-2 control-label" for="mLotNum">生产批号:</label>
+						<div class="col-sm-3">
+							<input type="text" class="form-control" id="mLotNum" name="mLotNum" placeholder="请输入药品的生产批号" />
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label class="col-sm-2 control-label" for="lossNum">数量：</label>
+						<div class="col-sm-8">
+							<input type="text" id="lossNum" name="lossNum" class="form-control" />
+						</div>
+						<div id="nowNum" class="col-sm-2" style="height: 30px;padding-top: 5px;display: none;color: red;"></div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label" for="lossTotal">总额：</label>
+						<div class="col-sm-8">
+							<input type="text" id="lossTotal" name="lossTotal" class="form-control" />
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label" for="lossInfo">报损原因：</label>
+						<div class="col-sm-8">
+							<textarea class="form-control" id="lossInfo" name="lossInfo" style="height: 80px;"></textarea>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label" for="lossDate">日期：</label>
+						<div class="col-sm-8">
+							<input type="text" id="lossDate" name="lossDate" class="form-control" />
+						</div>
+					</div>
+					<div class="col-sm-12 form-group" style="text-align: center;padding: 3px;">
+						<input type="submit" value="确定" class="btn btn-primary" />&nbsp;&nbsp;&nbsp;
+						<input type="reset" value="重置" class="btn btn-success" />
+					</div>
+				</form>
+			</div>
+		</div>
+	</body>
+
+</html>

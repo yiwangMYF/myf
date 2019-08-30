@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>登录页面</title>
+		<link rel="stylesheet" href="../css/bootstrap.css" />
+		<script src="../js/jquery-3.1.1.min.js"></script>
+		<script src="../js/bootstrap.js"></script>
+		<style type="text/css">
+			#body_div {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				min-width: 1000px;
+				z-index: -10;
+				zoom: 1;
+				background-color: #fff;
+				background: url(../img/登录背景.jpg);
+				background-repeat: no-repeat;
+				background-size: cover;
+				-webkit-background-size: cover;
+				-o-background-size: cover;
+				background-position: center 0;
+			}
+			
+			#form_div {
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				height: 330px;
+				width: 430px;
+				background-color: #2E6DA4;
+				margin: auto;
+				border: 1px solid #23527C;
+				padding: 20px;
+			}
+		</style>
+		<script type="text/javascript">
+			$(function() {});
+			//			实现点击验证码更换验证码功能
+			function changeImg(obj) {
+				obj.src = "http://localhost:8080/GD_myf/checkImge?time=" + new Date().getTime();
+			}
+			//表单提交
+			function smt() {
+				
+				$.ajax({
+					type: "post",
+					url: "http://localhost:8080/GD_myf/loginServlet",
+					async: true,
+					xhrFields: {
+						withCredentials: true
+					},
+					
+					//dataType: "json",
+					data: $("#login_form").serialize(),
+					success: function(result) {
+						var jsonObj = eval("("+result+")");
+				
+						if(jsonObj.success){
+						
+							//登录成功跳转到首页
+							location.href="index.html";
+						}else{
+						
+							//登录失败，信息回显
+							$("#div_none").css("display","block");
+							$("#div_none").html(jsonObj.error_info);
+						}
+					
+					}
+				
+				});
+				return false;
+			}
+		</script>
+	</head>
+
+	<body>
+		<div id="body_div">
+			<div id="form_div">
+				<div style="text-align: center;font-size:25px">乡村诊所药品管理系统</div>
+				<div style="display: none;padding-left: 50px;color: red;" id="div_none"><span style="color: #D58512;size: 16px;" id="erro_info">您好</span></div>
+				<form class="form-horizontal" style="padding-top: 20px;" id="login_form" onsubmit="return smt()">
+					<div class="form-group">
+						<label for="userId" class="col-sm-3 control-label">证件：</label>
+						<div class="col-sm-7">
+							<input type="text" class="form-control" id="useId" placeholder="请输入身份证号码" name="userId">
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="userPassword" class="col-sm-3 control-label">密&nbsp;码：</label>
+						<div class="col-sm-7">
+							<input type="password" class="form-control" id="userPassword" placeholder="请输入密码" name="userPassword">
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="checkcode" class="col-sm-3 control-label">验证码:</label>
+						<div class="col-sm-4">
+							<input type="text" class="form-control" id="checkCode" placeholder="请输入验证码" name="checkcode">
+						</div>
+						<div class="col-sm-4">
+							<img id="checkImge" src="http://localhost:8080/GD_myf/checkImge" onclick="changeImg(this)" />
+						</div>
+					</div>
+					<div class="col-sm-offset-2 col-sm-10 form-group" style="margin-left: 160px;">
+						<button class="btn btn-default" type="submit">登录</button>
+					</div>
+				</form>
+
+				<a href="regist.html">
+					<font color="#D58512">没有账号？点此进行账号注册</font>
+				</a>
+			</div>
+		</div>
+
+	</body>
+
+</html>

@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8" />
+		<title>乡村诊所药品管理系统</title>
+		<link rel="stylesheet" href="../css/bootstrap.css" />
+		<style>
+			body {
+				font-size: 12px;
+			}
+			
+			#header {
+				position: fixed;
+				width: 100%;
+				height: 100px;
+				top: 0px;
+				left: 0px;
+				background-color: #6B9CDE;
+			}
+			
+			#header .logo {
+				position: absolute;
+				top: 25px;
+				left: 80px;
+				border-radius: 5px;
+				background-color: #FFFFFF;
+				box-shadow: 0px 0px 10px 5px #FFFFFF;
+			}
+			
+			#title_1 {
+				position: absolute;
+				left: 150px;
+				top: 25px;
+				font-size: 35px;
+				color: white;
+			}
+			
+			#header .logout {
+				position: absolute;
+				top: 5px;
+				right: 50px;
+				font-size: 30px;
+				color: #FFFFFF;
+				cursor: pointer;
+			}
+			
+			#header .userInfo {
+				position: absolute;
+				width: 200px;
+				text-align: right;
+				right: 20px;
+				bottom: 5px;
+				color: #FFFFFF;
+			}
+			
+			#sideBar {
+				position: fixed;
+				width: 200px;
+				top: 100px;
+				left: 0px;
+				bottom: 10px;
+				background-color: #6495ED;
+			}
+			
+			#sideBar #nav {
+				width: 190px;
+				margin: 2px auto 0px;
+				background-color: #FFFFFF;
+				border-radius: 5px;
+			}
+			
+			#sideBar #nav li a {
+				text-align: center;
+			}
+			
+			#main {
+				position: fixed;
+				top: 100px;
+				right: 0px;
+				bottom: 10px;
+				left: 200px;
+			}
+			
+			#footer {
+				position: fixed;
+				width: 100%;
+				height: 10px;
+				left: 0px;
+				bottom: 0px;
+				background-color: #436EEE;
+			}
+			
+			#myModal .modal-dialog {
+				width: 400px;
+			}
+		</style>
+		<script src="../js/jquery-3.1.1.min.js"></script>
+		<script src="../js/bootstrap.js"></script>
+		<script>
+			/**
+			 * 展开或关闭菜单
+			 * @param {Object} currNodeId
+			 */
+			function openOrCloseMenu(currNodeId) {
+				//获得所有子节点
+				var subNodes = $("#sideBar ul li[parentId=" + currNodeId + "]");
+				//显示或隐藏子节点
+				if (subNodes.css("display") == "none") { //关闭状态
+					//展开菜单（显示子节点）
+					subNodes.css("display", "block");
+				} else { //展开状态
+					//关闭菜单（隐藏子节点）
+					subNodes.css("display", "none");
+				}
+			}
+			/**
+			 * 显示模态窗口
+			 * @param {Object} title
+			 * @param {Object} message
+			 * @param {Object} type
+			 * @param {Object} callback
+			 */
+			function showDialog(title, message, type, callback) {
+				//获得窗口的高度
+				var height = $(window).height();
+				//设置弹出框垂直居中对齐
+				$("#myModal .modal-dialog").css("margin-top", (height - 180) / 2 + "px");
+				//获得标题的元素对象
+				var modalTilte = $("#modalTilte");
+				//获得信息元素对象
+				var modalMessage = $("#modalMessage");
+				//设置标题
+				modalTilte.text(title);
+				//设置信息
+				modalMessage.text(message);
+				//判断窗口的类型
+				if (type == 1) { //信息提示框1（无回调函数）
+					$("#alertBtns").css("display", "block");
+					$("#confirmBtns").css("display", "none");
+					$("#confirm_2").css("display", "none");
+				} else if (type == 2) { //操作选择对话框
+					$("#alertBtns").css("display", "none");
+					$("#confirm_2").css("display", "none");
+					$("#confirmBtns").css("display", "block");
+					//确定按钮添加事件
+					$($("#confirmBtns button").get(0)).unbind("click");
+					$($("#confirmBtns button").get(0)).bind("click", function() {
+						//执行函数
+						callback.call();
+						//隐藏模态窗口
+						$("#myModal").modal("hide");
+					});
+				} else {
+					$("#alertBtns").css("display", "none");
+					$("#confirmBtns").css("display", "none");
+					$("#confirm_2").css("display", "block");
+					//确定按钮添加事件
+					$($("#confirm_2 button").get(0)).unbind("click");
+					$($("#confirm_2 button").get(0)).bind("click", function() {
+						//执行函数
+						callback.call();
+						//隐藏模态窗口
+						$("#myModal").modal("hide");
+					});
+				}
+				//显示模态窗口
+				$("#myModal").modal("show");
+			}
+			/**
+			 * 弹出提示框
+			 * @param {Object} title
+			 * @param {Object} message
+			 * @param {Object} callback
+			 */
+			function alertDialog(title, message) {
+				showDialog(title, message, 1);
+			}
+			/**
+			 * 弹出选择对话框
+			 * @param {Object} title
+			 * @param {Object} message
+			 * @param {Object} callback
+			 */
+			function confirmDialog(title, message, callback) {
+				showDialog(title, message, 2, callback);
+			}
+			/**
+			 * 确认提示框2(没有取消按钮)
+			 */
+			function confirmDialog_2(title, message, callback) {
+				showDialog(title, message, 3, callback);
+			}
+			//系统退出方法
+			function exit_s() {
+				confirmDialog("", "您确定要退出系统吗？", function() {
+					//退出系统前清除session
+					$.get("http://localhost:8080/GD_myf/clearSession", function() {
+						//跳转到登录页面
+						window.location.href = "login.html";
+					});
+				});
+			}
+			/**
+			 * 页面加载完毕后执行
+			 */
+			$(function() {
+				//获得窗口的高度
+				var height = $(window).height();
+				//设置弹出框垂直居中对齐
+				$("#myModal .modal-dialog").css("margin-top", (height - 180) / 2 + "px");
+				//添加欢迎用户信息
+				$.ajax({
+					type: "get",
+					url: "http://localhost:8080/GD_myf/UserInfo",
+					async: true,
+					xhrFields: {
+						withCredentials: true
+					},
+					success: function(result) {
+						//将其转化为json对象
+						var jsonObj = eval("(" + result + ")");
+						//将信息插入指定位置
+						$("#userInfo").html("欢迎您：" + jsonObj.user_name);
+					}
+				});
+			});
+		</script>
+	</head>
+
+	<body>
+		<div id="header">
+			<img src="../img/logo.jpg" width="50" height="50" class="logo" />
+			<span class="logout glyphicon glyphicon-log-out" aria-hidden="true" onclick="exit_s()"></span>
+			<span id="title_1">乡村诊所药品管理系统</span>
+
+			<span class="userInfo" id="userInfo" style="color:white;text-shadow: 1px 1px #D58512;"></span>
+		</div>
+		<div id="sideBar">
+			<ul id="nav" class="nav nav-pills nav-stacked">
+				<li id="1" class="active"><a href="javascript:openOrCloseMenu('1')">系统设置</a></li>
+				<li parentId="1" style="display: none;"><a href="changePassword.html" target="mainFrame">修改密码</a></li>
+				<li parentId="1" style="display: none;"><a href="javascript:void(0);" onclick="exit_s()">退出系统</a></li>
+				<li id="5" class="active"><a href="javascript:openOrCloseMenu('5')">供应商管理</a></li>
+				<li parentId="5" style="display:none;"><a href="../supplier/supplier_list.html" target="mainFrame">供应商查询</a></li>
+				<li parentId="5" style="display:none;"><a href="../supplier/supplier_add.html" target="mainFrame">添加供应商</a></li>
+				<li id="6" class="active"><a href="javascript:openOrCloseMenu('6')">药品信息管理</a></li>
+				<li parentId="6" style="display:none;"><a href="../medicine/medicine_queryBaseInfo.html" target="mainFrame">药品信息查询</a></li>	
+				<li id="2" class="active"><a href="javascript:openOrCloseMenu('2')">库存管理</a></li>
+				<li parentId="2" style="display:none;"><a href="../medicine/medicine_add.html" target="mainFrame">药品入库</a></li>
+				<li parentId="2" style="display:none;"><a href="../medicine/meidicine_frmloss.html" target="mainFrame">药品报损</a></li>
+				<li parentId="2" style="display:none;"><a href="../medicine/medicine_return.html" target="mainFrame">药品退货</a></li>
+				<li parentId="2" style="display:none;"><a href="../medicine/mecicine_stockList.html" target="mainFrame">库存浏览</a></li>
+				<li parentId="2" style="display:none;"><a href="../medicine/medicine_expList.html" target="mainFrame">近期及过期药品</a></li>
+				<li id="3" class="active"><a href="javascript:openOrCloseMenu('3')">处方管理</a></li>
+				<li parentId="3" style="display:none;"><a href="../prescription/prescription_query.html" target="mainFrame">处方查询</a></li>
+				<li parentId="3" style="display:none;"><a href="../prescription/prescription_add.html" target="mainFrame">处方添加</a></li>
+				<li id="4" class="active"><a href="javascript:openOrCloseMenu('4')">报表统计</a></li>
+				<li parentId="4" style="display:none;"><a href="../report_statistics/financial_report.html" target="mainFrame">财务统计</a></li>
+				<li parentId="4" style="display:none;"><a href="../report_statistics/sales_report.html" target="mainFrame">销量报表</a></li>
+
+			</ul>
+		</div>
+		<div id="main">
+			<iframe id="mainFrame" name="mainFrame" src="welcome.html" width="100%" height="100%" frameborder="0"></iframe>
+		</div>
+		<div id="footer"></div>
+		<div id="myModal" class="modal fade" tabindex="-1" role="dialog">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+						<h4 class="modal-title" id="modalTilte"></h4>
+					</div>
+					<div class="modal-body">
+						<p id="modalMessage"></p>
+					</div>
+					<div class="modal-footer">
+						<div id="alertBtns">
+							<button type="button" class="btn btn-primary" data-dismiss="modal">确 定</button>
+						</div>
+						<div id="confirmBtns">
+							<button type="button" class="btn btn-primary">确 定</button>
+							<button type="button" class="btn btn-default" data-dismiss="modal">取 消</button>
+						</div>
+						<div id="confirm_2">
+							<button type="button" class="btn btn-primary">确 定</button>
+						</div>
+					</div>
+				</div>
+				<!-- /.modal-content -->
+			</div>
+			<!-- /.modal-dialog -->
+		</div>
+		<!-- /.modal -->
+	</body>
+
+</html>
